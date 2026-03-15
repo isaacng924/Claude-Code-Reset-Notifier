@@ -6,6 +6,7 @@ import * as os from 'os';
 export interface WindowInfo {
   resetTime: Date;
   messageCount: number;
+  tokenCount: number;
 }
 
 /** Walk all .jsonl files under a directory recursively */
@@ -34,6 +35,7 @@ export function getWindowInfo(): WindowInfo | null {
 
   let oldestInWindow: number | null = null;
   let messageCount = 0;
+  let tokenCount = 0;
 
   for (const file of walkJsonl(claudeDir)) {
     let content: string;
@@ -57,6 +59,14 @@ export function getWindowInfo(): WindowInfo | null {
           if (oldestInWindow === null || ts < oldestInWindow) {
             oldestInWindow = ts;
           }
+          // Sum tokens from assistant entries (cache_read excluded — not quota-bearing)
+          if (entry.type === 'assistant' && entry.message?.usage) {
+            const u = entry.message.usage;
+            tokenCount +=
+              (u.input_tokens ?? 0) +
+              (u.output_tokens ?? 0) +
+              (u.cache_creation_input_tokens ?? 0);
+          }
         }
       } catch {
         // malformed line — skip
@@ -69,6 +79,7 @@ export function getWindowInfo(): WindowInfo | null {
   return {
     resetTime: new Date(oldestInWindow + fiveHoursMs),
     messageCount,
+    tokenCount,
   };
 }
 
