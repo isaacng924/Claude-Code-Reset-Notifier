@@ -8,5 +8,6 @@ export function getConfig() {
     lowUsageThreshold: cfg.get<number>('lowUsageThreshold', 20),
     enabled: cfg.get<boolean>('enabled', true),
     tokenLimit: cfg.get<number>('tokenLimit', 0),
+    tokenNudgeThreshold: cfg.get<number>('tokenNudgeThreshold', 0),
   };
 }

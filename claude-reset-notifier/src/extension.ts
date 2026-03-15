@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function scheduleWarning() {
-  const { enabled, warningMinutes, lowUsageThreshold, tokenLimit } = getConfig();
+  const { enabled, warningMinutes, lowUsageThreshold, tokenLimit, tokenNudgeThreshold } = getConfig();
 
   if (warningTimeout) {
     clearTimeout(warningTimeout);
@@ -50,7 +50,7 @@ function scheduleWarning() {
   if (msUntilWarning <= 0) {
     const msUntilReset = info.resetTime.getTime() - now;
     if (msUntilReset > 0) {
-      fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, warningMinutes);
+      fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
     }
     return;
   }
@@ -63,7 +63,7 @@ function scheduleWarning() {
     const currentInfo = getWindowInfo();
     const count = currentInfo?.messageCount ?? info.messageCount;
     const tokens = currentInfo?.tokenCount ?? info.tokenCount;
-    fireNotification(count, tokens, lowUsageThreshold, tokenLimit, warningMinutes);
+    fireNotification(count, tokens, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
   }, msUntilWarning);
 }
 
@@ -72,13 +72,16 @@ function fireNotification(
   tokenCount: number,
   threshold: number,
   tokenLimit: number,
+  tokenNudgeThreshold: number,
   warningMinutes: number
 ) {
   const lines: string[] = [
     `⏰ Your Claude Code quota resets in ${warningMinutes} minutes.`,
   ];
 
-  if (tokenCount > 0) {
+  const showTokenNudge = tokenCount > 0 && (tokenNudgeThreshold === 0 || tokenCount < tokenNudgeThreshold);
+
+  if (showTokenNudge) {
     if (tokenLimit > 0) {
       const pct = Math.round((tokenCount / tokenLimit) * 100);
       const used = formatTokens(tokenCount);
@@ -87,7 +90,7 @@ function fireNotification(
     } else {
       lines.push(`⚡ You've used ~${formatTokens(tokenCount)} tokens this window. Good time to start one more task.`);
     }
-  } else if (messageCount < threshold) {
+  } else if (tokenCount === 0 && messageCount < threshold) {
     lines.push(
       `⚡ You've only used ~${messageCount} messages this window. Good time to start one more task before it resets.`
     );

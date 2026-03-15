@@ -32,6 +32,11 @@
           "type": "number",
           "default": 0,
           "description": "Your plan's token limit per 5-hour window (0 = show count only, no percentage). Suggested values: Claude Max 5x → 500000, Claude Max 1x → 100000, Pro → 45000"
+        },
+        "claudeReset.tokenNudgeThreshold": {
+          "type": "number",
+          "default": 0,
+          "description": "Only show the token usage nudge if token count is below this value (0 = always show). Example: 400000 means only nudge if you've used less than 400k tokens this window."
         }
       }
     }
