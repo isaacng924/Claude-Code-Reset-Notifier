@@ -27,6 +27,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable or disable all notifications"
+        },
+        "claudeReset.tokenLimit": {
+          "type": "number",
+          "default": 0,
+          "description": "Your plan's token limit per 5-hour window (0 = show count only, no percentage). Suggested values: Claude Max 5x → 500000, Claude Max 1x → 100000, Pro → 45000"
         }
       }
     }

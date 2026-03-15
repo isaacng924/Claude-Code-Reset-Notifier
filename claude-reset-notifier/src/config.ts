@@ -7,5 +7,6 @@ export function getConfig() {
     warningMinutes: cfg.get<number>('warningMinutes', 10),
     lowUsageThreshold: cfg.get<number>('lowUsageThreshold', 20),
     enabled: cfg.get<boolean>('enabled', true),
+    tokenLimit: cfg.get<number>('tokenLimit', 0),
   };
 }
