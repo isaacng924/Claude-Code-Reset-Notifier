@@ -2,7 +2,7 @@
   "name": "claude-reset-notifier",
   "displayName": "Claude Code Reset Notifier",
   "description": "Get a 10-minute warning before your Claude Code quota resets",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "your-publisher-id",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],
