@@ -128,4 +128,67 @@ describe('getWindowInfo', () => {
       fs.rmSync(fakeHome, { recursive: true, force: true });
     }
   });
+
+  it('sums tokens from assistant entries in the window', () => {
+    const real = os.homedir;
+    const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'fakehome-'));
+    const claudeProjects = path.join(fakeHome, '.claude', 'projects', 'proj');
+    fs.mkdirSync(claudeProjects, { recursive: true });
+
+    const now = Date.now();
+    const ts = now - 1 * 3600_000;
+
+    const content = [
+      // user message — no usage
+      JSON.stringify({ type: 'user', timestamp: new Date(ts).toISOString() }),
+      // assistant message with usage
+      JSON.stringify({
+        type: 'assistant',
+        timestamp: new Date(ts + 1000).toISOString(),
+        message: {
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            cache_creation_input_tokens: 200,
+            cache_read_input_tokens: 999,
+          },
+        },
+      }),
+    ].join('\n');
+    fs.writeFileSync(path.join(claudeProjects, 'session.jsonl'), content);
+
+    (os as any).homedir = () => fakeHome;
+    try {
+      const info = getWindowInfo();
+      expect(info).not.toBeNull();
+      // 100 + 50 + 200 = 350 (cache_read excluded)
+      expect(info!.tokenCount).toBe(350);
+    } finally {
+      (os as any).homedir = real;
+      fs.rmSync(fakeHome, { recursive: true, force: true });
+    }
+  });
+
+  it('returns tokenCount 0 when no assistant entries have usage', () => {
+    const real = os.homedir;
+    const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'fakehome-'));
+    const claudeProjects = path.join(fakeHome, '.claude', 'projects', 'proj');
+    fs.mkdirSync(claudeProjects, { recursive: true });
+
+    const now = Date.now();
+    const ts = now - 1 * 3600_000;
+
+    const content = JSON.stringify({ type: 'user', timestamp: new Date(ts).toISOString() });
+    fs.writeFileSync(path.join(claudeProjects, 'session.jsonl'), content);
+
+    (os as any).homedir = () => fakeHome;
+    try {
+      const info = getWindowInfo();
+      expect(info).not.toBeNull();
+      expect(info!.tokenCount).toBe(0);
+    } finally {
+      (os as any).homedir = real;
+      fs.rmSync(fakeHome, { recursive: true, force: true });
+    }
+  });
 });
