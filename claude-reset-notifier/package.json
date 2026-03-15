@@ -1,41 +1,49 @@
 {
   "name": "claude-reset-notifier",
-  "displayName": "claude-reset-notifier",
+  "displayName": "Claude Code Reset Notifier",
   "description": "Get a 10-minute warning before your Claude Code quota resets",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
+  "version": "0.1.0",
+  "publisher": "your-publisher-id",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "keywords": ["claude", "claude code", "anthropic", "quota", "notification"],
+  "activationEvents": ["onStartupFinished"],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "claude-reset-notifier.helloWorld",
-        "title": "Hello World"
+    "configuration": {
+      "title": "Claude Reset Notifier",
+      "properties": {
+        "claudeReset.warningMinutes": {
+          "type": "number",
+          "default": 10,
+          "description": "Minutes before quota reset to send the warning notification"
+        },
+        "claudeReset.lowUsageThreshold": {
+          "type": "number",
+          "default": 20,
+          "description": "If message count in window is below this, show the 'use it or lose it' nudge"
+        },
+        "claudeReset.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable all notifications"
+        }
       }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "lint": "eslint src --ext ts",
+    "test:unit": "jest"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.3",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8"
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
   }
 }
