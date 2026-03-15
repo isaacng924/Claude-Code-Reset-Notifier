@@ -1,12 +1,8 @@
 module.exports = {
+  preset: 'ts-jest',
   testEnvironment: 'node',
   testMatch: ['**/src/**/*.test.ts'],
-  transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        module: 'CommonJS',
-        isolatedModules: true,
-      },
-    }],
+  moduleNameMapper: {
+    '^vscode$': '<rootDir>/src/__mocks__/vscode.ts',
   },
 };

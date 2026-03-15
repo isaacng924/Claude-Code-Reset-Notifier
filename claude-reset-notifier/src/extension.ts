@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { getWindowInfo } from './resetTracker';
 import { StatusBarManager } from './statusBar';
 import { getConfig } from './config';
+import { execFile } from 'child_process';
 
 let statusBar: StatusBarManager | undefined;
 let warningTimeout: NodeJS.Timeout | undefined;
@@ -93,6 +94,7 @@ function fireNotification(
   }
 
   vscode.window.showInformationMessage(lines.join('\n'));
+  fireSystemNotification('Claude Reset Notifier', lines.join(' '));
 }
 
 /** Format a token count compactly: 127432 → "127.4k", 1200000 → "1.2M" */
@@ -106,4 +108,14 @@ export function deactivate() {
   if (warningTimeout) clearTimeout(warningTimeout);
   if (recalcInterval) clearInterval(recalcInterval);
   statusBar?.stop();
+}
+
+/** Fires a macOS Notification Center alert visible outside VS Code. */
+export function fireSystemNotification(title: string, body: string): void {
+  const script = `display notification "${body}" with title "${title}"`;
+  execFile('/usr/bin/osascript', ['-e', script], (err) => {
+    if (err) {
+      console.error('Claude Reset Notifier: osascript failed:', err.message);
+    }
+  });
 }
