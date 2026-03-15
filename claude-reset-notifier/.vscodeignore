@@ -9,5 +9,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 out/**/*.test.js
+out/__mocks__/**
 jest.config.js
-out/
