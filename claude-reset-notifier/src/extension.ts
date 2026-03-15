@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function scheduleWarning() {
-  const { enabled, warningMinutes, lowUsageThreshold } = getConfig();
+  const { enabled, warningMinutes, lowUsageThreshold, tokenLimit } = getConfig();
 
   if (warningTimeout) {
     clearTimeout(warningTimeout);
@@ -49,7 +49,7 @@ function scheduleWarning() {
   if (msUntilWarning <= 0) {
     const msUntilReset = info.resetTime.getTime() - now;
     if (msUntilReset > 0) {
-      fireNotification(info.messageCount, lowUsageThreshold, warningMinutes);
+      fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, warningMinutes);
     }
     return;
   }
@@ -61,26 +61,45 @@ function scheduleWarning() {
   warningTimeout = setTimeout(() => {
     const currentInfo = getWindowInfo();
     const count = currentInfo?.messageCount ?? info.messageCount;
-    fireNotification(count, lowUsageThreshold, warningMinutes);
+    const tokens = currentInfo?.tokenCount ?? info.tokenCount;
+    fireNotification(count, tokens, lowUsageThreshold, tokenLimit, warningMinutes);
   }, msUntilWarning);
 }
 
 function fireNotification(
   messageCount: number,
+  tokenCount: number,
   threshold: number,
+  tokenLimit: number,
   warningMinutes: number
 ) {
   const lines: string[] = [
     `⏰ Your Claude Code quota resets in ${warningMinutes} minutes.`,
   ];
 
-  if (messageCount < threshold) {
+  if (tokenCount > 0) {
+    if (tokenLimit > 0) {
+      const pct = Math.round((tokenCount / tokenLimit) * 100);
+      const used = formatTokens(tokenCount);
+      const limit = formatTokens(tokenLimit);
+      lines.push(`⚡ You've used ~${used} / ${limit} tokens (${pct}%). Good time to start one more task.`);
+    } else {
+      lines.push(`⚡ You've used ~${formatTokens(tokenCount)} tokens this window. Good time to start one more task.`);
+    }
+  } else if (messageCount < threshold) {
     lines.push(
       `⚡ You've only used ~${messageCount} messages this window. Good time to start one more task before it resets.`
     );
   }
 
   vscode.window.showInformationMessage(lines.join('\n'));
+}
+
+/** Format a token count compactly: 127432 → "127.4k", 1200000 → "1.2M" */
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
 }
 
 export function deactivate() {
