@@ -37,6 +37,11 @@
           "type": "number",
           "default": 0,
           "description": "Only show the token usage nudge if token count is below this value (0 = always show). Example: 400000 means only nudge if you've used less than 400k tokens this window."
+        },
+        "claudeReset.resetTimeOffsetMinutes": {
+          "type": "number",
+          "default": 0,
+          "description": "Shift the calculated reset time by this many minutes (positive = later, negative = earlier). Useful when your usage window was started by a non-Claude Code Claude product (e.g. claude.ai web), which is not tracked in local logs. Example: set to 30 if the app consistently shows your reset 30 minutes too early."
         }
       }
     }

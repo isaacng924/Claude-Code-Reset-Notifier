@@ -1,6 +1,7 @@
 // src/statusBar.ts
 import * as vscode from 'vscode';
 import { getWindowInfo, formatCountdown } from './resetTracker';
+import { getConfig } from './config';
 
 export class StatusBarManager {
   private item: vscode.StatusBarItem;
@@ -16,9 +17,16 @@ export class StatusBarManager {
     context.subscriptions.push(this.item);
   }
 
-  start() {
+  start(context: vscode.ExtensionContext) {
     this.update();
     this.intervalId = setInterval(() => this.update(), 60_000);
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration('claudeReset')) {
+          this.update();
+        }
+      })
+    );
   }
 
   stop() {
@@ -36,7 +44,9 @@ export class StatusBarManager {
       return;
     }
 
-    const msRemaining = info.resetTime.getTime() - Date.now();
+    const { resetTimeOffsetMinutes } = getConfig();
+    const offsetMs = resetTimeOffsetMinutes * 60_000;
+    const msRemaining = info.resetTime.getTime() + offsetMs - Date.now();
     if (msRemaining <= 0) {
       this.item.text = '✅ Claude reset';
       return;

@@ -9,5 +9,6 @@ export function getConfig() {
     enabled: cfg.get<boolean>('enabled', true),
     tokenLimit: cfg.get<number>('tokenLimit', 0),
     tokenNudgeThreshold: cfg.get<number>('tokenNudgeThreshold', 0),
+    resetTimeOffsetMinutes: cfg.get<number>('resetTimeOffsetMinutes', 0),
   };
 }

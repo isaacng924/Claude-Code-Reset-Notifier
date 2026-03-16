@@ -37,6 +37,7 @@ With token limit configured:
 | `claudeReset.tokenLimit` | `0` | Your plan's token limit per 5-hour window (0 = show count only). See plan limits below |
 | `claudeReset.tokenNudgeThreshold` | `0` | Only show the nudge if token usage is below this value (0 = always show) |
 | `claudeReset.lowUsageThreshold` | `20` | Message count fallback nudge threshold (used only when no token data is available) |
+| `claudeReset.resetTimeOffsetMinutes` | `0` | Shift the reset time by N minutes (positive = later, negative = earlier). Use this when your window was started by a non-Claude Code Claude product (see below) |
 
 ### Plan Token Limits
 
@@ -47,6 +48,19 @@ Set `claudeReset.tokenLimit` to your plan's approximate limit:
 | Claude Max 5x | `500000` |
 | Claude Max 1x | `100000` |
 | Pro | `45000` |
+
+## Reset Time Offset
+
+The extension calculates your reset time by finding the **oldest message in `~/.claude/projects/`** within the last 5 hours. This only covers Claude Code conversations — usage from **claude.ai web, Claude mobile, or other Claude products** is not logged there.
+
+If you started your usage window from another Claude product, the extension will find an older Claude Code message and show a reset time that's **too early**. Use `resetTimeOffsetMinutes` to compensate:
+
+```json
+// If the countdown is consistently 30 minutes too early:
+"claudeReset.resetTimeOffsetMinutes": 30
+```
+
+The offset updates the status bar and warning notification immediately when you change the setting.
 
 ## macOS System Notifications
 

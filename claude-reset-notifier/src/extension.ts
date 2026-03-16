@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Claude Reset Notifier activated');
 
   statusBar = new StatusBarManager(context);
-  statusBar.start();
+  statusBar.start(context);
 
   scheduleWarning();
 
@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function scheduleWarning() {
-  const { enabled, warningMinutes, lowUsageThreshold, tokenLimit, tokenNudgeThreshold } = getConfig();
+  const { enabled, warningMinutes, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, resetTimeOffsetMinutes } = getConfig();
 
   if (warningTimeout) {
     clearTimeout(warningTimeout);
@@ -47,11 +47,13 @@ function scheduleWarning() {
   if (!info) return;
 
   const now = Date.now();
+  const offsetMs = resetTimeOffsetMinutes * 60_000;
+  const adjustedResetTime = info.resetTime.getTime() + offsetMs;
   const warningMs = warningMinutes * 60_000;
-  const msUntilWarning = info.resetTime.getTime() - warningMs - now;
+  const msUntilWarning = adjustedResetTime - warningMs - now;
 
   if (msUntilWarning <= 0) {
-    const msUntilReset = info.resetTime.getTime() - now;
+    const msUntilReset = adjustedResetTime - now;
     if (msUntilReset > 0 && now - lastNotificationTime > NOTIFICATION_COOLDOWN_MS) {
       lastNotificationTime = now;
       fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
