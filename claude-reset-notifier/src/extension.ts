@@ -8,6 +8,8 @@ import { execFile } from 'child_process';
 let statusBar: StatusBarManager | undefined;
 let warningTimeout: NodeJS.Timeout | undefined;
 let recalcInterval: NodeJS.Timeout | undefined;
+let lastNotificationTime = 0;
+const NOTIFICATION_COOLDOWN_MS = 60_000; // suppress duplicates within 1 minute
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Claude Reset Notifier activated');
@@ -49,7 +51,8 @@ function scheduleWarning() {
 
   if (msUntilWarning <= 0) {
     const msUntilReset = info.resetTime.getTime() - now;
-    if (msUntilReset > 0) {
+    if (msUntilReset > 0 && Date.now() - lastNotificationTime > NOTIFICATION_COOLDOWN_MS) {
+      lastNotificationTime = Date.now();
       fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
     }
     return;
@@ -63,6 +66,7 @@ function scheduleWarning() {
     const currentInfo = getWindowInfo();
     const count = currentInfo?.messageCount ?? info.messageCount;
     const tokens = currentInfo?.tokenCount ?? info.tokenCount;
+    lastNotificationTime = Date.now();
     fireNotification(count, tokens, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
   }, msUntilWarning);
 }
