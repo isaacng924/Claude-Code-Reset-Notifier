@@ -1,26 +1,59 @@
 # Claude Code Reset Notifier
 
-Get a **10-minute warning** before your Claude Code 5-hour quota resets — and a nudge if you've barely used it.
+Get a **10-minute warning** before your Claude Code 5-hour quota resets — visible even when VS Code is minimised.
 
 ## Features
 
-- **⏰ Reset Warning** — VS Code notification fires 10 minutes before your quota resets
-- **⚡ Use It or Lose It** — if you've sent fewer than 20 messages, a nudge encourages one more task
+- **⏰ Reset Warning** — notification fires before your quota resets, both inside VS Code and as a macOS system alert
+- **⚡ Use It or Lose It** — shows real token usage so you know how much quota you have left
 - **⏱️ Status Bar Countdown** — always-visible timer in the bottom-right of VS Code
 
 ## How It Works
 
-Claude Code stores conversation history at `~/.claude/projects/**/*.jsonl`. Each line contains a `timestamp` field. This extension reads those files to find the oldest message in your current 5-hour window, then schedules a notification at exactly the right moment.
+Claude Code stores conversation history at `~/.claude/projects/**/*.jsonl`. Each assistant entry contains a `usage` field with token counts. This extension reads those files to:
+
+1. Find the oldest message in your current 5-hour window → calculates exact reset time
+2. Sum `input + output + cache_creation` tokens → shows real usage in the nudge
+3. Schedule a notification at exactly the right moment
 
 No external services. No API calls. Just file reads and timers.
+
+## Notification Examples
+
+Without token limit configured:
+> ⏰ Your Claude Code quota resets in 10 minutes.
+> ⚡ You've used ~127.4k tokens this window. Good time to start one more task.
+
+With token limit configured:
+> ⏰ Your Claude Code quota resets in 10 minutes.
+> ⚡ You've used ~127.4k / 500.0k tokens (25%). Good time to start one more task.
 
 ## Configuration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `claudeReset.warningMinutes` | `10` | Minutes before reset to fire the notification |
-| `claudeReset.lowUsageThreshold` | `20` | Message count below which the nudge appears |
 | `claudeReset.enabled` | `true` | Toggle all notifications on/off |
+| `claudeReset.tokenLimit` | `0` | Your plan's token limit per 5-hour window (0 = show count only). See plan limits below |
+| `claudeReset.tokenNudgeThreshold` | `0` | Only show the nudge if token usage is below this value (0 = always show) |
+| `claudeReset.lowUsageThreshold` | `20` | Message count fallback nudge threshold (used only when no token data is available) |
+
+### Plan Token Limits
+
+Set `claudeReset.tokenLimit` to your plan's approximate limit:
+
+| Plan | Recommended `tokenLimit` |
+|------|--------------------------|
+| Claude Max 5x | `500000` |
+| Claude Max 1x | `100000` |
+| Pro | `45000` |
+
+## macOS System Notifications
+
+Notifications fire as macOS Notification Center alerts — visible even when VS Code is in the background or minimised.
+
+**If notifications don't appear outside VS Code:**
+Go to **System Settings → Notifications → Visual Studio Code** and enable "Allow Notifications".
 
 ## Why Not Use Claude Code Hooks?
 
