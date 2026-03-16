@@ -21,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Recalculate every 5 minutes in case new messages were sent
   recalcInterval = setInterval(scheduleWarning, 5 * 60_000);
+  context.subscriptions.push({ dispose: () => { if (recalcInterval) clearInterval(recalcInterval); } });
 
   // Also recalculate if settings change
   context.subscriptions.push(
@@ -51,8 +52,8 @@ function scheduleWarning() {
 
   if (msUntilWarning <= 0) {
     const msUntilReset = info.resetTime.getTime() - now;
-    if (msUntilReset > 0 && Date.now() - lastNotificationTime > NOTIFICATION_COOLDOWN_MS) {
-      lastNotificationTime = Date.now();
+    if (msUntilReset > 0 && now - lastNotificationTime > NOTIFICATION_COOLDOWN_MS) {
+      lastNotificationTime = now;
       fireNotification(info.messageCount, info.tokenCount, lowUsageThreshold, tokenLimit, tokenNudgeThreshold, warningMinutes);
     }
     return;
@@ -119,7 +120,8 @@ export function deactivate() {
 
 /** Fires a macOS Notification Center alert visible outside VS Code. */
 export function fireSystemNotification(title: string, body: string): void {
-  const script = `display notification "${body}" with title "${title}"`;
+  const safe = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const script = `display notification "${safe(body)}" with title "${safe(title)}"`;
   execFile('/usr/bin/osascript', ['-e', script], (err) => {
     if (err) {
       console.error('Claude Reset Notifier: osascript failed:', err.message);

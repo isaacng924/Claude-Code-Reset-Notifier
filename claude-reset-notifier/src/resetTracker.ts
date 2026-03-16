@@ -11,8 +11,13 @@ export interface WindowInfo {
 
 /** Walk all .jsonl files under a directory recursively */
 function* walkJsonl(dir: string): Generator<string> {
-  if (!fs.existsSync(dir)) return;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return; // directory doesn't exist or isn't readable
+  }
+  for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkJsonl(full);
